@@ -20,8 +20,8 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
 }
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
-	self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-	return self;
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    return self;
 }
 - (BOOL)disablesAutomaticKeyboardDismissal {
     return NO;
@@ -43,7 +43,7 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
     }
     
     if(self.dragEnabled || self.tapToTakePicture){
-       self.view.userInteractionEnabled = YES;
+        self.view.userInteractionEnabled = YES;
     }
     else{
         self.view.userInteractionEnabled = NO;
@@ -55,37 +55,37 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
 }
 - (void)viewDidLoad{
     [super viewDidLoad];
-
+    
     self.view.backgroundColor = [UIColor clearColor];
     
     // Create the AVCaptureSession
-     AVCaptureSession *session = [[AVCaptureSession alloc] init];
-     [self setSession:session];
-     
-     // Setup the preview view
-     [[self previewView] setSession:session];
-     
-     // Check for device authorization
-     [self checkDeviceAuthorizationStatus];
-     
-     dispatch_queue_t sessionQueue = dispatch_queue_create("session queue", DISPATCH_QUEUE_SERIAL);
-     [self setSessionQueue:sessionQueue];
-     
-     dispatch_async(sessionQueue, ^{
+    AVCaptureSession *session = [[AVCaptureSession alloc] init];
+    [self setSession:session];
+    
+    // Setup the preview view
+    [[self previewView] setSession:session];
+    
+    // Check for device authorization
+    [self checkDeviceAuthorizationStatus];
+    
+    dispatch_queue_t sessionQueue = dispatch_queue_create("session queue", DISPATCH_QUEUE_SERIAL);
+    [self setSessionQueue:sessionQueue];
+    
+    dispatch_async(sessionQueue, ^{
         [self setBackgroundRecordingID:UIBackgroundTaskInvalid];
         
         NSError *error = nil;
         
-		// Initial camera face
-         NSLog(@"defaultCamera: %@", self.defaultCamera);
-		AVCaptureDevicePosition position = AVCaptureDevicePositionUnspecified;
+        // Initial camera face
+        NSLog(@"defaultCamera: %@", self.defaultCamera);
+        AVCaptureDevicePosition position = AVCaptureDevicePositionUnspecified;
         if ([self.defaultCamera  isEqual: @"front"]){
             position = AVCaptureDevicePositionFront;
         }
         else{
             position = AVCaptureDevicePositionBack;
         }
-			
+        
         AVCaptureDevice *videoDevice = [CameraViewController deviceWithMediaType:AVMediaTypeVideo preferringPosition:position];
         AVCaptureDeviceInput *videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
         
@@ -125,13 +125,13 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
 - (void)panPiece:(UIPanGestureRecognizer *)gestureRecognizer{
     
     UIView *piece = [gestureRecognizer view];
-
+    
     [self adjustAnchorPointForGestureRecognizer:gestureRecognizer];
-
+    
     if ([gestureRecognizer state] == UIGestureRecognizerStateBegan || [gestureRecognizer state] == UIGestureRecognizerStateChanged) {
         
         CGPoint translation = [gestureRecognizer translationInView:[piece superview]];
-
+        
         [piece setCenter:CGPointMake([piece center].x + translation.x, [piece center].y + translation.y)];
         
         [gestureRecognizer setTranslation:CGPointZero inView:[piece superview]];
@@ -259,14 +259,14 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
                 
                 //fix front mirroring
                 if ([currentVideoDevice position] == AVCaptureDevicePositionFront) {
-                     UIImage *flippedImage = [UIImage imageWithCGImage:image.CGImage scale:image.scale orientation:UIImageOrientationLeftMirrored];
+                    UIImage *flippedImage = [UIImage imageWithCGImage:image.CGImage scale:image.scale orientation:UIImageOrientationLeftMirrored];
                     [self.libraryImageView setImage:flippedImage];
                 }
                 else{
                     [self.libraryImageView setImage:image];
                 }
-				
-				//final picture callback
+                
+                //final picture callback
                 UIImage *finalPicture = [self imageWithView:self.finalImageView];
                 [self.libraryImageView setImage:NULL];
                 
@@ -277,32 +277,33 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
                 __block NSString *originalPicturePath;
                 __block NSString *previewPicturePath;
                 
-                //task 1
-                dispatch_group_enter(group);
-                [library writeImageToSavedPhotosAlbum:[finalPicture CGImage] orientation:(ALAssetOrientation)[finalPicture imageOrientation] completionBlock:^(NSURL *assetURL, NSError *error) {
-                     if (error) {
-                         NSLog(@"FAILED to save Preview picture.");
-                     }
-                     else {
-                         previewPicturePath = [assetURL absoluteString];
-                         NSLog(@"previewPicturePath: %@", previewPicturePath);
-                         dispatch_group_leave(group);
-                    }
-                }];
-                
-                //task 2
-                dispatch_group_enter(group);
-                [library writeImageToSavedPhotosAlbum:[image CGImage] orientation:(ALAssetOrientation)[image imageOrientation] completionBlock:^(NSURL *assetURL, NSError *error) {
-                    if (error) {
-                        NSLog(@"FAILED to save Original picture.");
-                    }
-                    else {
-                        originalPicturePath = [assetURL absoluteString];
-                        NSLog(@"originalPicturePath: %@", originalPicturePath);
-                    }
-                    dispatch_group_leave(group);
-                }];
-                
+                /*
+                 //task 1
+                 dispatch_group_enter(group);
+                 [library writeImageToSavedPhotosAlbum:[finalPicture CGImage] orientation:(ALAssetOrientation)[finalPicture imageOrientation] completionBlock:^(NSURL *assetURL, NSError *error) {
+                 if (error) {
+                 NSLog(@"FAILED to save Preview picture.");
+                 }
+                 else {
+                 previewPicturePath = [assetURL absoluteString];
+                 NSLog(@"previewPicturePath: %@", previewPicturePath);
+                 dispatch_group_leave(group);
+                 }
+                 }];
+                 
+                 //task 2
+                 dispatch_group_enter(group);
+                 [library writeImageToSavedPhotosAlbum:[image CGImage] orientation:(ALAssetOrientation)[image imageOrientation] completionBlock:^(NSURL *assetURL, NSError *error) {
+                 if (error) {
+                 NSLog(@"FAILED to save Original picture.");
+                 }
+                 else {
+                 originalPicturePath = [assetURL absoluteString];
+                 NSLog(@"originalPicturePath: %@", originalPicturePath);
+                 }
+                 dispatch_group_leave(group);
+                 }];
+                 */
                 dispatch_group_notify(group, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                     NSLog(@"All pictures was saved!");
                     callback(originalPicturePath, previewPicturePath);
@@ -310,7 +311,7 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
             }
         }];
     });
-   
+    
 }
 
 - focusAndExposeTap:(UIGestureRecognizer *)gestureRecognizer
@@ -437,7 +438,7 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
 }
 
 -(void) switchCamera {
-
+    
     //setEnabled:NO
     
     dispatch_async([self sessionQueue], ^{
@@ -457,7 +458,7 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
                 preferredPosition = AVCaptureDevicePositionBack;
                 break;
         }
-
+        
         AVCaptureDevice *videoDevice = [CameraViewController deviceWithMediaType:AVMediaTypeVideo preferringPosition:preferredPosition];
         AVCaptureDeviceInput *videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:nil];
         
@@ -481,10 +482,10 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
         [[self session] commitConfiguration];
         
         //dispatch_async(dispatch_get_main_queue(), ^{
-            //setEnabled:YES
+        //setEnabled:YES
         //});
     });
-
+    
 }
 
 
