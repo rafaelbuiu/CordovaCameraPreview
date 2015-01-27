@@ -249,14 +249,14 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
 + (NSString *)saveImage:(UIImage *)image withName:(NSString *)name {
     NSData *data = UIImageJPEGRepresentation(image, 1.0);
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *fullPath = [applicationDocumentsDirectory stringByAppendingPathComponent:name];
+    NSString *fullPath = [[CameraViewController applicationDocumentsDirectory] stringByAppendingPathComponent:name];
     [fileManager createFileAtPath:fullPath contents:data attributes:nil];
 
     return fullPath;
 }
 
 + (UIImage *)loadImage:(NSString *)name {
-    NSString *fullPath = [applicationDocumentsDirectory stringByAppendingPathComponent:name];    
+    NSString *fullPath = [[CameraViewController applicationDocumentsDirectory] stringByAppendingPathComponent:name];    
     UIImage *img = [UIImage imageWithContentsOfFile:fullPath];
 
     return img;
