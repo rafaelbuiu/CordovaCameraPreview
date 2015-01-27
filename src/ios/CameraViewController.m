@@ -239,28 +239,30 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
 }
 
 
++ (NSString *) applicationDocumentsDirectory 
+{    
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
+    return basePath;
+}
+
 + (NSString *)saveImage:(UIImage *)image withName:(NSString *)name {
     NSData *data = UIImageJPEGRepresentation(image, 1.0);
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *fullPath = [documentsDirectory stringByAppendingPathComponent:name];
+    NSString *fullPath = [applicationDocumentsDirectory stringByAppendingPathComponent:name];
     [fileManager createFileAtPath:fullPath contents:data attributes:nil];
 
     return fullPath;
 }
 
 + (UIImage *)loadImage:(NSString *)name {
-    NSString *fullPath = [documentsDirectory stringByAppendingPathComponent:name];    
+    NSString *fullPath = [applicationDocumentsDirectory stringByAppendingPathComponent:name];    
     UIImage *img = [UIImage imageWithContentsOfFile:fullPath];
 
     return img;
 }
 
-// + (NSString *) applicationDocumentsDirectory 
-// {    
-//     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-//     NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
-//     return basePath;
-// }
+
 
 - (void)takePicture:(void(^)(NSString*, NSString*))callback {
     dispatch_async([self sessionQueue], ^{
