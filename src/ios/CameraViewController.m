@@ -280,7 +280,9 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
                 __block NSString *originalPicturePath;
                 __block NSString *previewPicturePath;
 
-                originalPicturePath = saveImage(image);
+                NSString *fileName = [[[NSUUID UUID] UUIDString] stringByAppendingString:@".jpg"];
+                
+                originalPicturePath = [saveImage: image withName: fileName]
 
                 //Preview picture:
                 AVCaptureDevice *currentVideoDevice = [[self videoDeviceInput] device];
@@ -301,8 +303,9 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
                 dispatch_group_t group = dispatch_group_create();
                 
                 
-
-                previewPicturePath = saveImage(finalPicture);
+                NSString *fileNamePreview = [[[NSUUID UUID] UUIDString] stringByAppendingString:@".jpg"];
+                
+                previewPicturePath = [saveImage:finalPicture withName:fileNamePreview]
 
                 
                 dispatch_group_notify(group, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
