@@ -285,7 +285,8 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
                 NSString *fileName = [[[NSUUID UUID] UUIDString] stringByAppendingString:@".jpg"];
                 
                 originalPicturePath = [CameraViewController saveImage: image withName: fileName];
-
+                NSLog(originalPicturePath);
+                
                 //Preview picture:
                 AVCaptureDevice *currentVideoDevice = [[self videoDeviceInput] device];
                 
@@ -298,17 +299,18 @@ static void * SessionRunningAndDeviceAuthorizedContext = &SessionRunningAndDevic
                     [self.libraryImageView setImage:image];
                 }
                 
-                //final picture callback
-                UIImage *finalPicture = [self imageWithView:self.finalImageView];
+                //preview picture callback
+                UIImage *previewPicture = [self imageWithView:self.finalImageView];
                 [self.libraryImageView setImage:NULL];
                 
                 dispatch_group_t group = dispatch_group_create();
                 
                 
                 NSString *fileNamePreview = [[[NSUUID UUID] UUIDString] stringByAppendingString:@".jpg"];
+            
+                previewPicturePath = [CameraViewController saveImage:previewPicture withName:fileNamePreview];
                 
-                previewPicturePath = [CameraViewController saveImage:finalPicture withName:fileNamePreview];
-
+                NSLog(previewPicturePath);
                 
                 dispatch_group_notify(group, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                     NSLog(@"All pictures was saved!");
