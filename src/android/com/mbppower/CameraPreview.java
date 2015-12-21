@@ -14,7 +14,6 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 public class CameraPreview extends CordovaPlugin implements CameraActivity.CameraPreviewListener {
 
@@ -63,7 +62,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 	    else if (switchCameraAction.equals(action)){
 		    return switchCamera(args, callbackContext);
 	    }
-    	
+
     	return false;
     }
 
@@ -87,7 +86,8 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 					String defaultCamera = args.getString(4);
 					Boolean tapToTakePicture = args.getBoolean(5);
 					Boolean dragEnabled = args.getBoolean(6);
-					
+					Boolean toBack = args.getBoolean(7);
+
 					fragment.defaultCamera = defaultCamera;
 					fragment.tapToTakePicture = tapToTakePicture;
 					fragment.dragEnabled = dragEnabled;
@@ -101,6 +101,16 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 
 						FrameLayout.LayoutParams containerLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
 						cordova.getActivity().addContentView(containerView, containerLayoutParams);
+					}
+					//display camera bellow the webview
+					if(toBack){
+						webView.getView().setBackgroundColor(0x00000000);
+						((ViewGroup)webView.getView()).bringToFront();
+					}
+					else{
+						//set camera back to front
+						containerView.setAlpha(Float.parseFloat(args.getString(8)));
+						containerView.bringToFront();
 					}
 
 					//add the fragment to the container
@@ -123,7 +133,15 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 		PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
 		pluginResult.setKeepCallback(true);
 		callbackContext.sendPluginResult(pluginResult);
-		fragment.takePicture();
+		try {
+			double maxWidth = args.getDouble(0);
+			double maxHeight = args.getDouble(1);
+			fragment.takePicture(maxWidth, maxHeight);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			return false;
+		}
 		return true;
 	}
 
@@ -145,7 +163,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
       return true;
     }
 
-    Camera.Parameters params = camera.getParameters();    
+    Camera.Parameters params = camera.getParameters();
 
     try {
       String effect = args.getString(0);

@@ -14,7 +14,7 @@ import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Display;
+import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -135,7 +135,7 @@ public class CameraActivity extends Fragment {
 					        boolean isSingleTapTouch = gestureDetector.onTouchEvent(event);
 					        if (event.getAction() != MotionEvent.ACTION_MOVE && isSingleTapTouch) {
 						        if (tapToTakePicture) {
-							        takePicture();
+							        takePicture(0, 0);
 						        }
 						        return true;
 					        }
@@ -218,7 +218,13 @@ public class CameraActivity extends Fragment {
         }
 
         cameraCurrentlyLocked = defaultCameraId;
-        mPreview.setCamera(mCamera);
+        
+        if(mPreview.mPreviewSize == null){
+		mPreview.setCamera(mCamera, cameraCurrentlyLocked);
+	} else {
+		mPreview.switchCamera(mCamera, cameraCurrentlyLocked);
+		mCamera.startPreview();
+	}
 
 	    Log.d(TAG, "cameraCurrentlyLocked:" + cameraCurrentlyLocked);
 
@@ -230,11 +236,10 @@ public class CameraActivity extends Fragment {
                 public void onGlobalLayout() {
                     frameContainerLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                     frameContainerLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                    int size = Math.max(frameContainerLayout.getHeight(), frameContainerLayout.getWidth());
                     final RelativeLayout frameCamContainerLayout = (RelativeLayout) view.findViewById(getResources().getIdentifier("frame_camera_cont", "id", appResourcesPackage));
 
-                    FrameLayout.LayoutParams camViewLayout = new FrameLayout.LayoutParams(size, size);
-                    camViewLayout.gravity = Gravity.CENTER_HORIZONTAL;
+                    FrameLayout.LayoutParams camViewLayout = new FrameLayout.LayoutParams(frameContainerLayout.getWidth(), frameContainerLayout.getHeight());
+                    camViewLayout.gravity = Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL;
                     frameCamContainerLayout.setLayoutParams(camViewLayout);
                 }
             });
@@ -248,7 +253,7 @@ public class CameraActivity extends Fragment {
         // Because the Camera object is a shared resource, it's very
         // important to release it when the activity is paused.
         if (mCamera != null) {
-            mPreview.setCamera(null);
+            mPreview.setCamera(null, -1);
             mCamera.release();
             mCamera = null;
         }
@@ -269,7 +274,7 @@ public class CameraActivity extends Fragment {
 		// Release this camera -> cameraCurrentlyLocked
 		if (mCamera != null) {
 			mCamera.stopPreview();
-			mPreview.setCamera(null);
+			mPreview.setCamera(null, -1);
 			mCamera.release();
 			mCamera = null;
 		}
@@ -283,7 +288,7 @@ public class CameraActivity extends Fragment {
 		}
 
 		cameraCurrentlyLocked = (cameraCurrentlyLocked + 1) % numberOfCameras;
-		mPreview.switchCamera(mCamera);
+		mPreview.switchCamera(mCamera, cameraCurrentlyLocked);
 
 	    Log.d(TAG, "cameraCurrentlyLocked new: " + cameraCurrentlyLocked);
 
@@ -312,7 +317,7 @@ public class CameraActivity extends Fragment {
         return ret;
     }
 	
-	public void takePicture(){
+	public void takePicture(final double maxWidth, final double maxHeight){
 		final ImageView pictureView = (ImageView) view.findViewById(getResources().getIdentifier("picture_view", "id", appResourcesPackage));
 		if(mPreview != null) {
 			
@@ -337,14 +342,13 @@ public class CameraActivity extends Fragment {
 							float scale = (float)pictureView.getWidth()/(float)pic.getWidth();
 							Bitmap scaledBitmap = Bitmap.createScaledBitmap(pic, (int)(pic.getWidth()*scale), (int)(pic.getHeight()*scale), false);
 
-							Matrix matrix = new Matrix();
+							final Matrix matrix = new Matrix();
 							if (cameraCurrentlyLocked == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-								float[] mirrorY = {1, 0, 0, 0, -1, 0, 0, 0, 1};
-								Matrix mMirror = new Matrix();
-								mMirror.setValues(mirrorY);
-								matrix.postConcat(mMirror);
+								Log.d(TAG, "mirror y axis");
+								matrix.preScale(-1.0f, 1.0f);
 							}
-							matrix.preRotate(mPreview.getDisplayOrientation());
+							Log.d(TAG, "preRotate " + mPreview.getDisplayOrientation() + "deg");
+							matrix.postRotate(mPreview.getDisplayOrientation());
 
 							final Bitmap fixedPic = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, false);
 							final Rect rect = new Rect(mPreview.mSurfaceView.getLeft(), mPreview.mSurfaceView.getTop(), mPreview.mSurfaceView.getRight(), mPreview.mSurfaceView.getBottom());
@@ -355,7 +359,26 @@ public class CameraActivity extends Fragment {
 									pictureView.setImageBitmap(fixedPic);
 									pictureView.layout(rect.left, rect.top, rect.right, rect.bottom);
 
-									generatePictureFromView(pic);
+									Bitmap finalPic = null;
+									//scale final picture
+									if(maxWidth > 0 && maxHeight > 0){
+										final double scaleHeight = maxWidth/(double)pic.getHeight();
+										final double scaleWidth = maxHeight/(double)pic.getWidth();
+										final double scale  = scaleHeight < scaleWidth ? scaleWidth : scaleHeight;
+										finalPic = Bitmap.createScaledBitmap(pic, (int)(pic.getWidth()*scale), (int)(pic.getHeight()*scale), false);
+									}
+									else{
+										finalPic = pic;
+									}
+
+									Bitmap originalPicture = Bitmap.createBitmap(finalPic, 0, 0, (int)(finalPic.getWidth()), (int)(finalPic.getHeight()), matrix, false);
+
+								    //get bitmap and compress
+								    Bitmap picture = loadBitmapFromView(view.findViewById(getResources().getIdentifier("frame_camera_cont", "id", appResourcesPackage)));
+								    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+								    picture.compress(Bitmap.CompressFormat.PNG, 80, stream);
+
+									generatePictureFromView(originalPicture, picture);
 									canTakePicture = true;
 								}
 							});
@@ -368,7 +391,7 @@ public class CameraActivity extends Fragment {
 			canTakePicture = true;
 		}
 	}
-    private void generatePictureFromView(final Bitmap originalPicture){
+    private void generatePictureFromView(final Bitmap originalPicture, final Bitmap picture){
 
 	    final FrameLayout cameraLoader = (FrameLayout)view.findViewById(getResources().getIdentifier("camera_loader", "id", appResourcesPackage));
 	    cameraLoader.setVisibility(View.VISIBLE);
@@ -377,14 +400,8 @@ public class CameraActivity extends Fragment {
 		    public void run() {
 
 			    try {
-				    //get bitmap and compress
-				    Bitmap picture = loadBitmapFromView(view.findViewById(getResources().getIdentifier("frame_camera_cont", "id", appResourcesPackage)));
-				    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				    picture.compress(Bitmap.CompressFormat.PNG, 80, stream);
-
 				    final File picFile = storeImage(picture, "_preview");
 				    final File originalPictureFile = storeImage(originalPicture, "_original");
-
 
 					eventListener.onPictureTaken(originalPictureFile.getAbsolutePath(), picFile.getAbsolutePath());
 
@@ -398,8 +415,13 @@ public class CameraActivity extends Fragment {
 			    }
 			    catch(Exception e){
 				    //An unexpected error occurred while saving the picture.
-				    cameraLoader.setVisibility(View.INVISIBLE);
-				    pictureView.setImageBitmap(null);
+				    getActivity().runOnUiThread(new Runnable() {
+					    @Override
+					    public void run() {
+				            cameraLoader.setVisibility(View.INVISIBLE);
+						    pictureView.setImageBitmap(null);
+					    }
+				    });
 			    }
 		    }
 	    }.start();
@@ -482,6 +504,8 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
     Camera.Size mPreviewSize;
     List<Camera.Size> mSupportedPreviewSizes;
     Camera mCamera;
+    int cameraId;
+    int displayOrientation;
 
     Preview(Context context) {
         super(context);
@@ -498,45 +522,67 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
     }
 
-    public void setCamera(Camera camera) {
+    public void setCamera(Camera camera, int cameraId) {
         mCamera = camera;
+        this.cameraId = cameraId;
         if (mCamera != null) {
             mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
-            mCamera.setDisplayOrientation(getDisplayOrientation());
+            setCameraDisplayOrientation();
             //mCamera.getParameters().setRotation(getDisplayOrientation());
             //requestLayout();
         }
     }
 
     public int getDisplayOrientation() {
-        int angle;
-        Display display = ((Activity)getContext()).getWindowManager().getDefaultDisplay();
-        switch (display.getRotation()) {
-            case Surface.ROTATION_0: // This is display orientation
-                angle = 90; // This is camera orientation
-                break;
-            case Surface.ROTATION_90:
-                angle = 0;
-                break;
-            case Surface.ROTATION_180:
-                angle = 270;
-                break;
-            case Surface.ROTATION_270:
-                angle = 180;
-                break;
-            default:
-                angle = 90;
-                break;
-        }
-        return angle;
+    	return displayOrientation;
     }
 
-    public void switchCamera(Camera camera) {
-        setCamera(camera);
+    private void setCameraDisplayOrientation() {
+        Camera.CameraInfo info=new Camera.CameraInfo();
+        int rotation=
+            ((Activity)getContext()).getWindowManager().getDefaultDisplay()
+                         .getRotation();
+        int degrees=0;
+        DisplayMetrics dm=new DisplayMetrics();
+
+        Camera.getCameraInfo(cameraId, info);
+        ((Activity)getContext()).getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                degrees=0;
+                break;
+            case Surface.ROTATION_90:
+                degrees=90;
+                break;
+            case Surface.ROTATION_180:
+                degrees=180;
+                break;
+            case Surface.ROTATION_270:
+                degrees=270;
+                break;
+        }
+
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+        	displayOrientation=(info.orientation + degrees) % 360;
+        	displayOrientation=(360 - displayOrientation) % 360;
+        } else {
+        	displayOrientation=(info.orientation - degrees + 360) % 360;
+        }
+
+        Log.d(TAG, "screen is rotated " + degrees + "deg from natural");
+        Log.d(TAG, (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT ? "front" : "back")
+        	+ " camera is oriented -" + info.orientation + "deg from natural");
+        Log.d(TAG, "need to rotate preview " + displayOrientation + "deg");
+        mCamera.setDisplayOrientation(displayOrientation);
+    }
+
+    public void switchCamera(Camera camera, int cameraId) {
+        setCamera(camera, cameraId);
         try {
             camera.setPreviewDisplay(mHolder);
 	        Camera.Parameters parameters = camera.getParameters();
-	        parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+            parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
 	        camera.setParameters(parameters);
         }
         catch (IOException exception) {
@@ -565,15 +611,8 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
         if (changed && getChildCount() > 0) {
             final View child = getChildAt(0);
 
-            int orientation = getDisplayOrientation();
-
             int width = r - l;
             int height = b - t;
-
-            if(orientation == 90 || orientation == 270) {
-                width = b - t;
-                height = r - l;
-            }
 
             int previewWidth = width;
             int previewHeight = height;
@@ -582,12 +621,12 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
                 previewWidth = mPreviewSize.width;
                 previewHeight = mPreviewSize.height;
 
-	            LOG.d(TAG, "previewWidth:" + previewWidth + " previewHeight:" + previewHeight);
-
-                if(orientation == 90 || orientation == 270) {
+                if(displayOrientation == 90 || displayOrientation == 270) {
                     previewWidth = mPreviewSize.height;
                     previewHeight = mPreviewSize.width;
                 }
+
+	            LOG.d(TAG, "previewWidth:" + previewWidth + " previewHeight:" + previewHeight);
             }
 
             int nW;
@@ -595,10 +634,11 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
             int top;
             int left;
 
-            float scale = ((float)previewHeight/(float)height);
+            float scale = 1.0f;
 
             // Center the child SurfaceView within the parent.
             if (width * previewHeight < height * previewWidth) {
+                Log.d(TAG, "center horizontally");
                 int scaledChildWidth = (int)((previewWidth * height / previewHeight) * scale);
                 nW = (width + scaledChildWidth) / 2;
                 nH = (int)(height * scale);
@@ -606,6 +646,7 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
                 left = (width - scaledChildWidth) / 2;
             }
             else {
+                Log.d(TAG, "center vertically");
                 int scaledChildHeight = (int)((previewHeight * width / previewWidth) * scale);
                 nW = (int)(width * scale);
                 nH = (height + scaledChildHeight) / 2;
@@ -643,6 +684,9 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
     private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
         final double ASPECT_TOLERANCE = 0.1;
         double targetRatio = (double) w / h;
+        if (displayOrientation == 90 || displayOrientation == 270) {
+            targetRatio = (double) h / w;
+        }
         if (sizes == null) return null;
 
         Camera.Size optimalSize = null;
@@ -670,6 +714,8 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
                 }
             }
         }
+
+        Log.d(TAG, "optimal preview size: w: " + optimalSize.width + " h: " + optimalSize.height);
         return optimalSize;
     }
 
@@ -678,10 +724,10 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
 		    // Now that the size is known, set up the camera parameters and begin
 		    // the preview.
 		    Camera.Parameters parameters = mCamera.getParameters();
-		    parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+            parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
 		    requestLayout();
 		    //mCamera.setDisplayOrientation(90);
-		    //mCamera.setParameters(parameters);
+		    mCamera.setParameters(parameters);
 		    mCamera.startPreview();
 	    }
     }
