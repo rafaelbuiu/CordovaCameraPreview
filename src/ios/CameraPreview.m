@@ -187,17 +187,22 @@
 - (void) invokeTakePicture {
         [self invokeTakePicture:0.0 withHeight:0.0];
 }
-
++ (NSString *) applicationDocumentsDirectory 
+{    
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
+    return basePath;
+}
 + (NSString *)saveImage:(UIImage *)image withName:(NSString *)name {
     NSData *data = UIImageJPEGRepresentation(image, 1.0);
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *fullPath = [[CameraViewController applicationDocumentsDirectory] stringByAppendingPathComponent:name];
+    NSString *fullPath = [[CameraPreview applicationDocumentsDirectory] stringByAppendingPathComponent:name];
     [fileManager createFileAtPath:fullPath contents:data attributes:nil];
 
     return fullPath;
 }
 
-+ (UIImage *)normalizedImage:(UUImage *)image {
++ (UIImage *)normalizedImage:(UIImage *)image {
     if (image.imageOrientation == UIImageOrientationUp) return image; 
 
     UIGraphicsBeginImageContextWithOptions(image.size, NO, image.scale);
@@ -216,7 +221,7 @@
                 NSLog(@"%@", error);
             } else {
                 NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:sampleBuffer];
-                UIImage *capturedImage  = [[UIImage alloc] initWithData:imageData];
+                UIImage *capturedImage  = [CameraPreview normalizedImage:[[UIImage alloc] initWithData:imageData]];
 
                 CIImage *capturedCImage;
                 //image resize
@@ -251,15 +256,14 @@
                 if (filter != nil) {
                     [self.sessionManager.filterLock lock];
                     [filter setValue:imageToFilter forKey:kCIInputImageKey];
-                    finalCImage = [CameraViewController normalizedImage: [filter outputImage]];
+                    finalCImage = [filter outputImage];
                     [self.sessionManager.filterLock unlock];
                 } else {
-                    finalCImage = [CameraViewController normalizedImage: imageToFilter];
+                    finalCImage = imageToFilter;
                 }
-
                 __block NSString *originalPicturePath;
                 NSString *fileName = [[[NSUUID UUID] UUIDString] stringByAppendingString:@".jpg"];
-                originalPicturePath = [CameraViewController saveImage: image withName: fileName];
+                originalPicturePath = [CameraPreview saveImage: [[UIImage alloc] initWithCIImage:finalCImage] withName: fileName];
 
                 NSLog(originalPicturePath);
                 dispatch_group_t group = dispatch_group_create();
