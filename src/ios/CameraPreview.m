@@ -263,7 +263,9 @@
                 }
                 __block NSString *originalPicturePath;
                 NSString *fileName = [[[NSUUID UUID] UUIDString] stringByAppendingString:@".jpg"];
-                originalPicturePath = [CameraPreview saveImage: [[UIImage alloc] initWithCIImage:finalCImage] withName: fileName];
+                CIContext *context = [CIContext contextWithOptions:nil];
+                UIImage *saveUIImage = [UIImage imageWithCGImage:[context createCGImage:finalCImage fromRect:finalCImage.extent]];
+                originalPicturePath = [CameraPreview saveImage: saveUIImage withName: fileName];
 
                 NSLog(originalPicturePath);
                 dispatch_group_t group = dispatch_group_create();
