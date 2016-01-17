@@ -682,42 +682,21 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
         }
     }
     private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
-        final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio = (double) w / h;
-        if (displayOrientation == 90 || displayOrientation == 270) {
-            targetRatio = (double) h / w;
-        }
-        if (sizes == null) return null;
+		int bestChoice = 0;
 
-        Camera.Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
+		int currentDiffHeigh = Integer.MAX_VALUE;
+		int currentDiffWidth = Integer.MAX_VALUE;
 
-        int targetHeight = h;
-
-        // Try to find an size match aspect ratio and size
-        for (Camera.Size size : sizes) {
-            double ratio = (double) size.width / size.height;
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-            if (Math.abs(size.height - targetHeight) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(size.height - targetHeight);
-            }
-        }
-
-        // Cannot find the one match the aspect ratio, ignore the requirement
-        if (optimalSize == null) {
-            minDiff = Double.MAX_VALUE;
-            for (Camera.Size size : sizes) {
-                if (Math.abs(size.height - targetHeight) < minDiff) {
-                    optimalSize = size;
-                    minDiff = Math.abs(size.height - targetHeight);
-                }
-            }
-        }
-
-        Log.d(TAG, "optimal preview size: w: " + optimalSize.width + " h: " + optimalSize.height);
-        return optimalSize;
-    }
+		for (int i = 0; i < sizes.size(); i++){
+			int diff = Math.abs(sizes.get(i).width - w ) + Math.abs(sizes.get(i).height - h );
+			if(diff < currentDiffHeigh){
+				currentDiffHeigh = diff;
+				bestChoice = i;
+			}
+		}
+		
+		return sizes.get(bestChoice);
+	}
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 	    if(mCamera != null) {
