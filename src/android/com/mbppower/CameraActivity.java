@@ -210,7 +210,6 @@ public class CameraActivity extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
         mCamera = Camera.open(defaultCameraId);
 
         if (cameraParameters != null) {
@@ -451,7 +450,7 @@ public class CameraActivity extends Fragment {
         if (pictureFile != null) {
             try {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
-                image.compress(Bitmap.CompressFormat.JPEG, 80, fos);
+                image.compress(Bitmap.CompressFormat.JPEG, 80, fos); //TODO: Make compression a param.
                 fos.close();
                 return pictureFile;
             }
@@ -583,6 +582,7 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
             camera.setPreviewDisplay(mHolder);
 	        Camera.Parameters parameters = camera.getParameters();
             parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 	        camera.setParameters(parameters);
         }
         catch (IOException exception) {
@@ -681,13 +681,32 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
             mCamera.stopPreview();
         }
     }
-    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
+
+	private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
+		int bestChoice = 0;
+
+		int currentHighest = 0;
+
+		for (int i = 0; i < sizes.size(); i++){
+			int res = sizes.get(i).width * sizes.get(i).height;
+			if(res > currentHighest){
+				currentHighest = res;
+				bestChoice = i;
+			}
+		}
+
+		return sizes.get(bestChoice);
+	}
+
+	private Camera.Size getOptimalPreviewSizeOLD(List<Camera.Size> sizes, int w, int h) {
 		int bestChoice = 0;
 
 		int currentDiffHeigh = Integer.MAX_VALUE;
 		int currentDiffWidth = Integer.MAX_VALUE;
 
 		for (int i = 0; i < sizes.size(); i++){
+			Log.e("height " + i, Integer.toString(sizes.get(i).height));
+			Log.e("width " + i, Integer.toString(sizes.get(i).width));
 			int diff = Math.abs(sizes.get(i).width - w ) + Math.abs(sizes.get(i).height - h );
 			if(diff < currentDiffHeigh){
 				currentDiffHeigh = diff;
@@ -704,10 +723,12 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
 		    // the preview.
 		    Camera.Parameters parameters = mCamera.getParameters();
             parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 		    requestLayout();
 		    //mCamera.setDisplayOrientation(90);
 		    mCamera.setParameters(parameters);
 		    mCamera.startPreview();
+
 	    }
     }
 
