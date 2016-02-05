@@ -383,30 +383,18 @@ public class CameraActivity extends Fragment {
 
 	    //final FrameLayout cameraLoader = (FrameLayout)view.findViewById(getResources().getIdentifier("camera_loader", "id", appResourcesPackage));
 	    //cameraLoader.setVisibility(View.VISIBLE);
-	    final ImageView pictureView = (ImageView) view.findViewById(getResources().getIdentifier("picture_view", "id", appResourcesPackage));
+	    //final ImageView pictureView = (ImageView) view.findViewById(getResources().getIdentifier("picture_view", "id", appResourcesPackage));
 		try {
 			//final File picFile = storeImage(picture, "_preview");
 			final File originalPictureFile = storeImage(originalPicture, "_original");
 
 			eventListener.onPictureTaken(originalPictureFile.getAbsolutePath(), originalPictureFile.getAbsolutePath());//picFile.getAbsolutePath());
 
-			getActivity().runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					//cameraLoader.setVisibility(View.INVISIBLE);
-					pictureView.setImageBitmap(null);
-				}
-			});
+
 		}
 		catch(Exception e){
 			//An unexpected error occurred while saving the picture.
-			getActivity().runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					//cameraLoader.setVisibility(View.INVISIBLE);
-					pictureView.setImageBitmap(null);
-				}
-			});
+
 		}
     }
 
