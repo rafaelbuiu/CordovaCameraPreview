@@ -42,7 +42,7 @@
         view.context = self.context;
         view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
         view.contentMode = UIViewContentModeScaleToFill;
-
+        view.layer.zPosition = 1;
         glGenRenderbuffers(1, &_renderBuffer);
         glBindRenderbuffer(GL_RENDERBUFFER, _renderBuffer);
 
@@ -79,7 +79,7 @@
          object:nil];
 
         dispatch_async(self.sessionManager.sessionQueue, ^{
-                NSLog(@"Starting session");
+                NSLog(@"Starting session 1");
                 [self.sessionManager.session startRunning];
         });
 }
@@ -115,7 +115,7 @@
 
 - (void) appplicationIsActive:(NSNotification *)notification {
         dispatch_async(self.sessionManager.sessionQueue, ^{
-                NSLog(@"Starting session");
+                NSLog(@"Starting session 2");
                 [self.sessionManager.session startRunning];
         });
 }
@@ -140,10 +140,10 @@
                 if (scaleHeight < scaleWidth) {
                         scale = scaleWidth;
                         x = 0;
-                        y = ((scale * image.extent.size.height) - self.view.frame.size.height ) / 2;
+                        y = ceil(((scale * image.extent.size.height) - self.view.frame.size.height ) / 2);
                 } else {
                         scale = scaleHeight;
-                        x = ((scale * image.extent.size.width) - self.view.frame.size.width )/ 2;
+                        x = ceil(((scale * image.extent.size.width) - self.view.frame.size.width )/ 2);
                         y = 0;
                 }
 
@@ -161,7 +161,7 @@
 
                 // crop
                 CIFilter *cropFilter = [CIFilter filterWithName:@"CICrop"];
-                CIVector *cropRect = [CIVector vectorWithX:0 Y:0 Z:self.view.frame.size.width W:self.view.frame.size.height];
+                CIVector *cropRect = [CIVector vectorWithX:0 Y:0 Z:round(self.view.frame.size.width) W:round(self.view.frame.size.height)];
                 [cropFilter setValue:transformedImage forKey:kCIInputImageKey];
                 [cropFilter setValue:cropRect forKey:@"inputRectangle"];
                 CIImage *croppedImage = [cropFilter outputImage];
