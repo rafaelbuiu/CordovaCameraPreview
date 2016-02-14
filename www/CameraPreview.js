@@ -12,40 +12,40 @@ CameraPreview.setOnPictureTakenHandler = function(onPictureTaken) {
 
 //@param rect {x: 0, y: 0, width: 100, height:100}
 //@param defaultCamera "front" | "back"
-CameraPreview.startCamera = function(rect, defaultCamera, tapEnabled, dragEnabled, toBack, alpha) {
+CameraPreview.startCamera = function(rect, defaultCamera, tapEnabled, dragEnabled, toBack, alpha, onSuccess, onError) {
   if (typeof(alpha) === 'undefined') alpha = 1;
-  exec(null, null, PLUGIN_NAME, "startCamera", [rect.x, rect.y, rect.width, rect.height, defaultCamera, !!tapEnabled, !!dragEnabled, !!toBack, alpha]);
+  exec(onSuccess, onError, PLUGIN_NAME, "startCamera", [rect.x, rect.y, rect.width, rect.height, defaultCamera, !!tapEnabled, !!dragEnabled, !!toBack, alpha]);
 };
-CameraPreview.stopCamera = function() {
-  exec(null, null, PLUGIN_NAME, "stopCamera", []);
+CameraPreview.stopCamera = function(onSuccess, onError) {
+  exec(onSuccess, onError, PLUGIN_NAME, "stopCamera", []);
 };
 //@param size {maxWidth: 100, maxHeight:100}
-CameraPreview.takePicture = function(size) {
+CameraPreview.takePicture = function(size, onSuccess, onError) {
   var params = [0, 0];
   if (size) {
     params = [size.maxWidth, size.maxHeight];
   }
-  exec(null, null, PLUGIN_NAME, "takePicture", params);
+  exec(onSuccess, onError, PLUGIN_NAME, "takePicture", params);
 };
 
-CameraPreview.setColorEffect = function(effect) {
-  exec(null, null, PLUGIN_NAME, "setColorEffect", [effect]);
+CameraPreview.setColorEffect = function(effect, onSuccess, onError) {
+  exec(onSuccess, onError, PLUGIN_NAME, "setColorEffect", [effect]);
 };
 
-CameraPreview.switchCamera = function() {
-  exec(null, null, PLUGIN_NAME, "switchCamera", []);
+CameraPreview.switchCamera = function(onSuccess, onError) {
+  exec(onSuccess, onError, PLUGIN_NAME, "switchCamera", []);
 };
 
-CameraPreview.hide = function() {
-  exec(null, null, PLUGIN_NAME, "hideCamera", []);
+CameraPreview.hide = function(onSuccess, onError) {
+  exec(onSuccess, onError, PLUGIN_NAME, "hideCamera", []);
 };
 
-CameraPreview.show = function() {
-  exec(null, null, PLUGIN_NAME, "showCamera", []);
+CameraPreview.show = function(onSuccess, onError) {
+  exec(onSuccess, onError, PLUGIN_NAME, "showCamera", []);
 };
 
-CameraPreview.disable = function(disable) {
-  exec(null, null, PLUGIN_NAME, "disable", [disable]);
+CameraPreview.disable = function(disable, onSuccess, onError) {
+  exec(onSuccess, onError, PLUGIN_NAME, "disable", [disable]);
 };
 
 module.exports = CameraPreview;
