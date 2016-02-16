@@ -1,4 +1,4 @@
-package com.mbppower;
+package com.stephan-nordnes-eriksen;
 
 import android.app.Activity;
 import android.app.Fragment;

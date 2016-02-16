@@ -19,13 +19,13 @@ Show camera preview popup on top of the HTML.<br/>
 <p><b>Installation:</b></p>
 
 ```
-cordova plugin add https://github.com/mbppower/CordovaCameraPreview.git
+cordova plugin add https://github.com/stephan-nordnes-eriksen/CordovaCameraPreview.git
 ```
 
 <b>Phonegap Build:</b><br/>
 
 ```
-<gap:plugin name="com.mbppower.camerapreview" version="0.0.8" source="plugins.cordova.io" />
+<gap:plugin name="com.stephan-nordnes-eriksen.camerapreview" version="0.0.8" source="plugins.cordova.io" />
 ```
 
 <p><b>Methods:</b></p>
@@ -105,8 +105,8 @@ Please, refer to this documentation: http://docs.phonegap.com/en/edge/cordova_fi
 Method <i>readAsDataURL</i>: Read file and return data as a base64-encoded data URL.
 
 <b>Sample:</b><br/>
-Please see the <a href="https://github.com/mbppower/CordovaCameraPreviewApp">CordovaCameraPreviewApp</a> for a complete working example for Android and iOS platforms.
+Please see the <a href="https://github.com/stephan-nordnes-eriksen/CordovaCameraPreviewApp">CordovaCameraPreviewApp</a> for a complete working example for Android and iOS platforms.
 
 <p><b>Android Screenshots:</b></p>
-<p><img src="https://raw.githubusercontent.com/mbppower/CordovaCameraPreview/master/docs/img/android-1.png"/></p>
-<p><img src="https://raw.githubusercontent.com/mbppower/CordovaCameraPreview/master/docs/img/android-2.png"/></p>
+<p><img src="https://raw.githubusercontent.com/stephan-nordnes-eriksen/CordovaCameraPreview/master/docs/img/android-1.png"/></p>
+<p><img src="https://raw.githubusercontent.com/stephan-nordnes-eriksen/CordovaCameraPreview/master/docs/img/android-2.png"/></p>
