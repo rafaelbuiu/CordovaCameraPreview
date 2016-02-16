@@ -3,7 +3,7 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="com.mbppower.camerapreview"
-    version="0.0.8">
+    version="1.0.0">
     <name>CameraPreview</name>
     <description>Cordova plugin that allows camera interaction from HTML code. Show camera preview popup on top of the HTML.</description>
     <license>Apache 2.0</license>
@@ -26,8 +26,8 @@
     </config-file>
     
     <config-file target="AndroidManifest.xml" parent="/manifest">
-	<uses-feature android:name="android.hardware.camera" />
-	<uses-feature android:name="android.hardware.camera.autofocus" />
+  <uses-feature android:name="android.hardware.camera" android:required="false" />
+  <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 	<uses-permission android:name="android.permission.CAMERA" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     </config-file>
