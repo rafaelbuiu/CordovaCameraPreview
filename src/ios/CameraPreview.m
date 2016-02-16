@@ -30,7 +30,7 @@
                 self.sessionManager = [[CameraSessionManager alloc] init];
 
                 //render controller setup
-                self.cameraRenderController = [[CameraRenderController alloc] init];
+                self.cameraRenderController = [[CameraRenderController alloc] initWithWebView:self.webView];
                 self.cameraRenderController.dragEnabled = dragEnabled;
                 self.cameraRenderController.tapToTakePicture = tapToTakePicture;
                 self.cameraRenderController.sessionManager = self.sessionManager;
@@ -43,18 +43,18 @@
                         //make transparent
                         self.webView.opaque = NO;
                         self.webView.backgroundColor = [UIColor clearColor];
-                        [self.viewController.view insertSubview:self.cameraRenderController.view atIndex:0];
-                }
-                else{
-                        self.cameraRenderController.view.alpha = (CGFloat)[command.arguments[8] floatValue];
+                        [self.viewController.view insertSubview:self.cameraRenderController.view atIndex:0];   
+                } else {
+                    self.cameraRenderController.view.alpha = (CGFloat)[command.arguments[8] floatValue];
 
-                        [self.viewController.view addSubview:self.cameraRenderController.view];
+                    [self.viewController.view addSubview:self.cameraRenderController.view];
                 }
 
                 // Setup session
+           
                 self.sessionManager.delegate = self.cameraRenderController;
                 [self.sessionManager setupSession:defaultCamera];
-
+            
                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         } else {
                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid number of parameters"];
@@ -83,7 +83,13 @@
 
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
+- (void) focusCamera:(CDVInvokedUrlCommand*)command {
+    // TODO: Make camera focus.
 
+    // if (self.cameraRenderController != nil) {
+    //TODO: Focus the camera
+    // }
+}
 - (void) hideCamera:(CDVInvokedUrlCommand*)command {
         NSLog(@"hideCamera");
         CDVPluginResult *pluginResult;
@@ -177,6 +183,12 @@
                         CIFilter *filter = [CIFilter filterWithName:@"CISepiaTone"];
                         [filter setDefaults];
                         [self.sessionManager setCiFilter:filter];
+                });
+        } else if ([filterName isEqual: @"frame"]) {
+                dispatch_async(self.sessionManager.sessionQueue, ^{
+                    CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectProcess"]; //CIPhotoEffectTransfer? CIPhotoEffectInstant?
+                    [filter setDefaults];
+                    [self.sessionManager setCiFilter:filter];
                 });
         } else {
                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Filter not found"];

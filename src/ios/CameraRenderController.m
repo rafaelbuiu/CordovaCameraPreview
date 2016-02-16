@@ -15,6 +15,14 @@
         }
         return self;
 }
+- (CameraRenderController *)initWithWebView:(UIWebView *)webview
+{
+    if (self = [super init]) {
+        self.renderLock = [[NSLock alloc] init];
+        self.webview = webview;
+    }
+    return self;
+}
 
 - (void)loadView {
         GLKView *glkView = [[GLKView alloc] init];
@@ -42,7 +50,8 @@
         view.context = self.context;
         view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
         view.contentMode = UIViewContentModeScaleToFill;
-        view.layer.zPosition = 1;
+//        view.layer.zPosition = 6;
+
         glGenRenderbuffers(1, &_renderBuffer);
         glBindRenderbuffer(GL_RENDERBUFFER, _renderBuffer);
 
@@ -146,8 +155,13 @@
                         x = ceil(((scale * image.extent.size.width) - self.view.frame.size.width )/ 2);
                         y = 0;
                 }
-
+                //NSLog(self.webview.backgroundColor);
                 // scale - translate
+                if(self.webview.backgroundColor == [UIColor blackColor]){
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        self.webview.backgroundColor = [UIColor clearColor];
+                    });
+                }
                 CGAffineTransform xscale = CGAffineTransformMakeScale(scale, scale);
                 CGAffineTransform xlate = CGAffineTransformMakeTranslation(-x, -y);
                 CGAffineTransform xform =  CGAffineTransformConcat(xscale, xlate);
