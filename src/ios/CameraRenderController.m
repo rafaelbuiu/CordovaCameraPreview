@@ -157,7 +157,7 @@
                 }
                 //NSLog(self.webview.backgroundColor);
                 // scale - translate
-                if(self.webview.backgroundColor == [UIColor blackColor]){
+                if(self.webview && self.webview.backgroundColor == [UIColor blackColor]){
                     dispatch_async(dispatch_get_main_queue(), ^{
                         self.webview.backgroundColor = [UIColor clearColor];
                     });
