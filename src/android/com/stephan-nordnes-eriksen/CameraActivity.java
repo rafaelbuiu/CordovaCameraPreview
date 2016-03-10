@@ -1,4 +1,4 @@
-package com.stephan-nordnes-eriksen;
+package com.mbppower;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -207,7 +207,13 @@ public class CameraActivity extends Fragment {
 			}
 		}
 	}
-	
+   private void releaseCameraAndPreview() {
+		mPreview.setCamera(null, -1);
+		if (mCamera != null) {
+			mCamera.release();
+			mCamera = null;
+		}
+	}
     @Override
     public void onResume() {
         super.onResume();
@@ -217,7 +223,13 @@ public class CameraActivity extends Fragment {
 			return;
 		}
 
-		mCamera = Camera.open(defaultCameraId);
+		try {
+			releaseCameraAndPreview();
+			mCamera = Camera.open(defaultCameraId);
+		} catch (Exception e) {
+		    //Log.e(getString(R.string.app_name), "failed to open Camera");
+		    e.printStackTrace();
+		}
 
 		//mCamera.lock();
         if (cameraParameters != null) {
