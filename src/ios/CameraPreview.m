@@ -6,8 +6,12 @@
 #import "CameraPreview.h"
 
 @implementation CameraPreview
+//static cameraIsReady = NO;
 
 - (void) startCamera:(CDVInvokedUrlCommand*)command {
+//        [self.commandDelegate runInBackground:^{
+//                            sleep(3);
+//
 
         CDVPluginResult *pluginResult;
 
@@ -26,11 +30,13 @@
                 BOOL tapToTakePicture = (BOOL)[command.arguments[5] boolValue];
                 BOOL dragEnabled = (BOOL)[command.arguments[6] boolValue];
                 BOOL toBack = (BOOL)[command.arguments[7] boolValue];
+           // sleep(3);
                 // Create the session manager
                 self.sessionManager = [[CameraSessionManager alloc] init];
 
                 //render controller setup
-                self.cameraRenderController = [[CameraRenderController alloc] initWithWebView:self.webView];
+//            self.cameraRenderController = [[CameraRenderController alloc] init];
+            self.cameraRenderController = [[CameraRenderController alloc] initWithWebView:self.webView];//  [[CameraRenderController alloc] init];
                 self.cameraRenderController.dragEnabled = dragEnabled;
                 self.cameraRenderController.tapToTakePicture = tapToTakePicture;
                 self.cameraRenderController.sessionManager = self.sessionManager;
@@ -38,22 +44,33 @@
                 self.cameraRenderController.delegate = self;
 
                 [self.viewController addChildViewController:self.cameraRenderController];
-                //display the camera bellow the webview
-                if (toBack) {
-                        //make transparent
-                        self.webView.opaque = NO;
-                        self.webView.backgroundColor = [UIColor clearColor];
-                        [self.viewController.view insertSubview:self.cameraRenderController.view atIndex:0];   
-                } else {
-                    self.cameraRenderController.view.alpha = (CGFloat)[command.arguments[8] floatValue];
+            
 
-                    [self.viewController.view addSubview:self.cameraRenderController.view];
-                }
+//                dispatch_async(dispatch_get_main_queue(), ^{
+                    //display the camera bellow the webview
+                    if (toBack) {
+                            //make transparent
+                            self.webView.opaque = NO;
+                            self.webView.backgroundColor = [UIColor clearColor];
+                        
+//                            self.webView.layer.zPosition = 4;
+//                            self.viewController.view.layer.zPosition = 1;
+//                            self.cameraRenderController.view.layer.zPosition = 4;
+                        
+                            [self.viewController.view insertSubview:self.cameraRenderController.view atIndex:0];
+//                        [self.viewController.view bringSubviewToFront:self.cameraRenderController.view];
+                        
+                    } else {
+                        self.cameraRenderController.view.alpha = (CGFloat)[command.arguments[8] floatValue];
 
+                        [self.viewController.view addSubview:self.cameraRenderController.view];
+                    }
+         //       });
                 // Setup session
            
                 self.sessionManager.delegate = self.cameraRenderController;
                 [self.sessionManager setupSession:defaultCamera];
+            
             
                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         } else {
@@ -61,6 +78,8 @@
         }
 
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+
+//            }];
 }
 
 - (void) stopCamera:(CDVInvokedUrlCommand*)command {
@@ -84,10 +103,19 @@
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 - (void) focusCamera:(CDVInvokedUrlCommand*)command {
+            CDVPluginResult *pluginResult;
+    if (self.sessionManager != nil) {
+        [self.sessionManager focusCamera];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    } else {
+         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Camera not started"];
+    }
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+//                [[videoDeviceInput device] focusPointOfInterest];
     // TODO: Make camera focus.
 
     // if (self.cameraRenderController != nil) {
-    //TODO: Focus the camera
+    //     [self.cameraRenderController.view setHidden:YES];
     // }
 }
 - (void) hideCamera:(CDVInvokedUrlCommand*)command {
@@ -199,12 +227,17 @@
 - (void) invokeTakePicture {
         [self invokeTakePicture:0.0 withHeight:0.0];
 }
-+ (NSString *) applicationDocumentsDirectory 
++ (NSString *) applicationDocumentsDirectoryOld 
 {    
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
     return basePath;
 }
++ (NSString *)applicationDocumentsDirectory {
+    return [[[[NSFileManager defaultManager] URLsForDirectory:NSLibraryDirectory
+         inDomains:NSUserDomainMask] lastObject].path stringByAppendingPathComponent:@"NoCloud"];
+}
+
 + (NSString *)saveImage:(UIImage *)image withName:(NSString *)name {
     NSData *data = UIImageJPEGRepresentation(image, 1.0);
     NSFileManager *fileManager = [NSFileManager defaultManager];
