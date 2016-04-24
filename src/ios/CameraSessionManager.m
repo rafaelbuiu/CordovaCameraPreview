@@ -111,6 +111,25 @@
                 }
         }
 }
+- (void) focusCamera
+{
+    //TODO: Actually accept a point.
+    CGPoint point = CGPointMake(.5f, .5f);
+    NSError *error;
+    AVCaptureDevice *device =[[self videoDeviceInput] device];
+    if ([device isFocusModeSupported:AVCaptureFocusModeAutoFocus] &&
+        [device isFocusPointOfInterestSupported])
+    {
+        if ([device lockForConfiguration:&error]) {
+            [device setFocusPointOfInterest:point];
+            [device setFocusMode:AVCaptureFocusModeAutoFocus];
+            [device unlockForConfiguration];
+        } else {
+            NSLog(@"Error: %@", error);
+        }
+    }
+//    [[[self videoDeviceInput] device] focusPointOfInterest];
+}
 - (void) switchCamera
 {
         if (self.defaultCamera == AVCaptureDevicePositionFront) {

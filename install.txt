@@ -1,2 +1,2 @@
-cordova plugin rm com.stephan-nordnes-eriksen.camerapreview
+cordova plugin rm com.snesconsulting.camerapreview
 cordova plugin add ../CordovaCameraPreview

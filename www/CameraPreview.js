@@ -27,7 +27,9 @@ CameraPreview.takePicture = function(size, onSuccess, onError) {
   }
   exec(onSuccess, onError, PLUGIN_NAME, "takePicture", params);
 };
-
+CameraPreview.focusCamera = function(onSuccess, onError) {
+  exec(onSuccess, onError, PLUGIN_NAME, "focusCamera", []);
+};
 CameraPreview.setColorEffect = function(effect, onSuccess, onError) {
   exec(onSuccess, onError, PLUGIN_NAME, "setColorEffect", [effect]);
 };
