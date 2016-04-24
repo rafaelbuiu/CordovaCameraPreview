@@ -1,4 +1,4 @@
-package com.mbppower;
+package com.snesconsulting;
 
 import android.app.Activity;
 import android.app.Fragment;
