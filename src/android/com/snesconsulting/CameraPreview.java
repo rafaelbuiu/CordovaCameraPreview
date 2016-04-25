@@ -12,7 +12,6 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -227,7 +226,7 @@ public class CameraActivity extends Fragment {
 				if (grantResults[0] != PackageManager.PERMISSION_GRANTED){
 
 				} else {
-					startTheBloodyCamera(defaultCameraId);
+					startTheCamera(defaultCameraId);
 				}
 				break;
 			default:
@@ -240,23 +239,21 @@ public class CameraActivity extends Fragment {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
 			if(ContextCompat.checkSelfPermission(this.getContext(), android.Manifest.permission.CAMERA)
 					== PackageManager.PERMISSION_GRANTED) {
-				startTheBloodyCamera(cameraId);
+				startTheCamera(cameraId);
 				Log.d("test", this.mainLayout.toString());
 			} else {
 				if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)){
-//						Toast.makeText(this,"No Permission to use the Camera services", Toast.LENGTH_SHORT).show();
+					//We don't have permission and are denied
 				}
 				requestPermissions(new String[] {android.Manifest.permission.CAMERA},REQUEST_CAMERA_RESULT);
 				defaultCameraId = cameraId;
 			}
 		} else {
-			startTheBloodyCamera(cameraId);
+			startTheCamera(cameraId);
 		}
 	}
 
-	private void startTheBloodyCamera(int cameraId){
-
-
+	private void startTheCamera(int cameraId){
 		// OK, we have multiple cameras.
 		// Release this camera -> cameraCurrentlyLocked
 		if (mCamera != null) {
@@ -265,8 +262,6 @@ public class CameraActivity extends Fragment {
 			mCamera.release();
 			mCamera = null;
 		}
-
-
 
 		try {
 			releaseCameraAndPreview();
@@ -292,8 +287,6 @@ public class CameraActivity extends Fragment {
 	@Override
 	public void onResume() {
 		super.onResume();
-		//CameraManager manager = (CameraManager) getActivity().getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
-		//manager.openCamera(defaultCamera,);
 		if(Camera.getNumberOfCameras() <= 0 || mCamera != null){
 			return;
 		}
@@ -404,7 +397,6 @@ public class CameraActivity extends Fragment {
 					Log.d(TAG, "preRotate " + mPreview.getDisplayOrientation() + "deg");
 					matrix.postRotate(mPreview.getDisplayOrientation());
 
-
 					//Bitmap finalPic = null;
 					//scale final picture
 					if(maxWidth > 0 && maxHeight > 0){
@@ -427,29 +419,20 @@ public class CameraActivity extends Fragment {
 
 	private void generatePictureFromView(final Bitmap originalPicture){
 
-		//final FrameLayout cameraLoader = (FrameLayout)view.findViewById(getResources().getIdentifier("camera_loader", "id", appResourcesPackage));
-		//cameraLoader.setVisibility(View.VISIBLE);
-		//final ImageView pictureView = (ImageView) view.findViewById(getResources().getIdentifier("picture_view", "id", appResourcesPackage));
 		try {
 			//final File picFile = storeImage(picture, "_preview");
 			final File originalPictureFile = storeImage(originalPicture, "_original");
 
 			eventListener.onPictureTaken(originalPictureFile.getAbsolutePath(), originalPictureFile.getAbsolutePath());//picFile.getAbsolutePath());
-
-
 		}
 		catch(Exception e){
 			//An unexpected error occurred while saving the picture.
-
 		}
 	}
 
 	private File getOutputMediaFile(String suffix){
 
 		File mediaStorageDir = getActivity().getApplicationContext().getFilesDir();
-	    /*if(Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED && Environment.getExternalStorageState() != Environment.MEDIA_MOUNTED_READ_ONLY) {
-		    mediaStorageDir = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getActivity().getApplicationContext().getPackageName() + "/Files");
-	    }*/
 		if (! mediaStorageDir.exists()){
 			if (! mediaStorageDir.mkdirs()){
 				return null;
@@ -476,34 +459,6 @@ public class CameraActivity extends Fragment {
 			}
 		}
 		return null;
-	}
-
-	public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-		// Raw height and width of image
-		final int height = options.outHeight;
-		final int width = options.outWidth;
-		int inSampleSize = 1;
-
-		if (height > reqHeight || width > reqWidth) {
-
-			final int halfHeight = height / 2;
-			final int halfWidth = width / 2;
-
-			// Calculate the largest inSampleSize value that is a power of 2 and keeps both
-			// height and width larger than the requested height and width.
-			while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth) {
-				inSampleSize *= 2;
-			}
-		}
-		return inSampleSize;
-	}
-
-	private Bitmap loadBitmapFromView(View v) {
-		Bitmap b = Bitmap.createBitmap( v.getMeasuredWidth(), v.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-		Canvas c = new Canvas(b);
-		v.layout(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-		v.draw(c);
-		return b;
 	}
 
 	@Override
@@ -544,15 +499,11 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
 		this.cameraId = cameraId;
 		if (mCamera != null) {
 			mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
-			//mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, this.getMeasuredWidth(), this.getMeasuredHeight());
 			mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, 0, 0);
 			setCameraDisplayOrientation();
 
-			//resize(0, 0, mPreviewSize.width, mPreviewSize.height);
+			//We must resize because the ratio can possibly be off due to lack of mPreviewSize onLayout change
 			resize(0,0,getMeasuredWidth(), getMeasuredHeight());
-
-			//mCamera.getParameters().setRotation(getDisplayOrientation());
-			//requestLayout();
 		}
 	}
 
@@ -601,10 +552,8 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
 	}
 
 	public void switchCamera(Camera camera, int cameraId) {
-		//setCamera(camera, cameraId);
 		try {
 			camera.setPreviewDisplay(mHolder);
-			//camera.setPreviewTexture();//TODO: use this to get more effects
 			Camera.Parameters parameters = camera.getParameters();
 			parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
 			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
@@ -613,7 +562,6 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
 		catch (IOException exception) {
 			Log.e(TAG, exception.getMessage());
 		}
-		//requestLayout();
 	}
 
 	@Override
@@ -624,10 +572,6 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
 		final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
 		final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
 		setMeasuredDimension(width, height);
-
-		if (mSupportedPreviewSizes != null) {
-			//mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
-		}
 	}
 
 	@Override
@@ -726,40 +670,17 @@ class Preview extends RelativeLayout implements SurfaceHolder.Callback {
 		return sizes.get(bestChoice);
 	}
 
-	private Camera.Size getOptimalPreviewSizeOLD(List<Camera.Size> sizes, int w, int h) {
-		int bestChoice = 0;
-
-		int currentDiffHeigh = Integer.MAX_VALUE;
-		int currentDiffWidth = Integer.MAX_VALUE;
-
-		for (int i = 0; i < sizes.size(); i++){
-			Log.e("height " + i, Integer.toString(sizes.get(i).height));
-			Log.e("width " + i, Integer.toString(sizes.get(i).width));
-			int diff = Math.abs(sizes.get(i).width - w ) + Math.abs(sizes.get(i).height - h );
-			if(diff < currentDiffHeigh){
-				currentDiffHeigh = diff;
-				bestChoice = i;
-			}
-		}
-
-		return sizes.get(bestChoice);
-	}
-
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 		if(mCamera != null) {
 			// Now that the size is known, set up the camera parameters and begin
 			// the preview.
-			if(mPreviewSize == null){
-
-			}
 			Camera.Parameters parameters = mCamera.getParameters();
 			parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
 			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 			requestLayout();
-			//mCamera.setDisplayOrientation(90);
+
 			mCamera.setParameters(parameters);
 			mCamera.startPreview();
-
 		}
 	}
 
