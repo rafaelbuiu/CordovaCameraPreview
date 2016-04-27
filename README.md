@@ -25,7 +25,7 @@ cordova plugin add https://github.com/snesconsulting/CordovaCameraPreview.git
 <b>Phonegap Build:</b><br/>
 
 ```
-<gap:plugin name="com.snesconsulting.camerapreview" version="0.0.8" source="plugins.cordova.io" />
+<gap:plugin name="com.snesconsulting.camerapreview" version="1.0.1" source="plugins.cordova.io" />
 ```
 
 <p><b>Methods:</b></p>
