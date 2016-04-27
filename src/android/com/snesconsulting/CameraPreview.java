@@ -74,6 +74,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
         if(fragment != null){
 	        return false;
         }
+
 		fragment = new CameraActivity();
 		fragment.setEventListener(this);
 
@@ -122,8 +123,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 					FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 					fragmentTransaction.add(containerView.getId(), fragment);
 					fragmentTransaction.commit();
-				}
-				catch(Exception e){
+				} catch(Exception e){
 					e.printStackTrace();
 				}
             }
