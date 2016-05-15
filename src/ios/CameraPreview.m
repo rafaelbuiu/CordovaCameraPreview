@@ -30,6 +30,8 @@
                 BOOL tapToTakePicture = (BOOL)[command.arguments[5] boolValue];
                 BOOL dragEnabled = (BOOL)[command.arguments[6] boolValue];
                 BOOL toBack = (BOOL)[command.arguments[7] boolValue];
+                BOOL toGallery = (BOOL)[command.arguments[8] boolValue];
+                self.storeToGalery = toGallery;
            // sleep(3);
                 // Create the session manager
                 self.sessionManager = [[CameraSessionManager alloc] init];
@@ -306,13 +308,18 @@
                 } else {
                     finalCImage = imageToFilter;
                 }
-                __block NSString *originalPicturePath;
+                __block NSString *originalPicturePath = @"";
                 NSString *fileName = [[[NSUUID UUID] UUIDString] stringByAppendingString:@".jpg"];
                 CIContext *context = [CIContext contextWithOptions:nil];
                 UIImage *saveUIImage = [UIImage imageWithCGImage:[context createCGImage:finalCImage fromRect:finalCImage.extent]];
-                originalPicturePath = [CameraPreview saveImage: saveUIImage withName: fileName];
+                
+                if(self.storeToGalery){
+                    UIImageWriteToSavedPhotosAlbum(saveUIImage, nil, nil, nil);
+                } else {
+                    originalPicturePath = [CameraPreview saveImage: saveUIImage withName: fileName];
+                    NSLog(originalPicturePath);
+                }
 
-                NSLog(originalPicturePath);
                 dispatch_group_t group = dispatch_group_create();
                 dispatch_group_notify(group, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                     NSMutableArray *params = [[NSMutableArray alloc] init];
