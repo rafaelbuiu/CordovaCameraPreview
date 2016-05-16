@@ -1,5 +1,5 @@
 package com.snesconsulting;
-
+import android.Manifest;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
@@ -14,6 +14,8 @@ import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.DisplayMetrics;
@@ -30,9 +32,7 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-
 import org.apache.cordova.LOG;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,9 +41,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import static android.support.v4.content.PermissionChecker.checkSelfPermission;
+
 public class CameraActivity extends Fragment {
 
 	private static final int REQUEST_CAMERA_RESULT = 1;
+	public Boolean storeToGallery;
 
 	public interface CameraPreviewListener {
 		public void onPictureTaken(String originalPicturePath, String previewPicturePath);
@@ -227,6 +230,11 @@ public class CameraActivity extends Fragment {
 
 				} else {
 					startTheCamera(defaultCameraId);
+				}
+				break;
+			case REQUEST_CODE_ASK_PERMISSIONS:
+				if(currentPicture != null){
+					storeImageToGallery(currentPicture);
 				}
 				break;
 			default:
@@ -419,13 +427,45 @@ public class CameraActivity extends Fragment {
 		}
 	}
 
+	private static final int REQUEST_CODE_ASK_PERMISSIONS = 123;
+	private Boolean requestExternalWriteRequest() {
+		int hasWriteContactsPermission = ContextCompat.checkSelfPermission(getActivity(),
+				Manifest.permission.WRITE_EXTERNAL_STORAGE);
+		if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED) {
+			if (!ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+					Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+					ActivityCompat.requestPermissions(getActivity(),
+							new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
+							REQUEST_CODE_ASK_PERMISSIONS);
+				return false;
+			}
+			ActivityCompat.requestPermissions(getActivity(),
+					new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
+					REQUEST_CODE_ASK_PERMISSIONS);
+			return false;
+		}
+		return true;
+	}
+
+	Bitmap currentPicture;
 	private void generatePictureFromView(final Bitmap originalPicture){
 
 		try {
 			//final File picFile = storeImage(picture, "_preview");
-			final File originalPictureFile = storeImage(originalPicture, "_original");
+			if(storeToGallery){
+				currentPicture = originalPicture; //used in callback in case we don't have permission to store
+                if (!requestExternalWriteRequest()) {
+					return;
+				}
 
-			eventListener.onPictureTaken(originalPictureFile.getAbsolutePath(), originalPictureFile.getAbsolutePath());//picFile.getAbsolutePath());
+				storeImageToGallery(currentPicture);
+			} else{
+				final File originalPictureFile = storeImage(originalPicture, "_original");
+
+				eventListener.onPictureTaken(originalPictureFile.getAbsolutePath(), originalPictureFile.getAbsolutePath());//picFile.getAbsolutePath());
+			}
+
 		}
 		catch(Exception e){
 			//An unexpected error occurred while saving the picture.
@@ -433,7 +473,6 @@ public class CameraActivity extends Fragment {
 	}
 
 	private File getOutputMediaFile(String suffix){
-
 		File mediaStorageDir = getActivity().getApplicationContext().getFilesDir();
 		if (! mediaStorageDir.exists()){
 			if (! mediaStorageDir.mkdirs()){
@@ -447,7 +486,11 @@ public class CameraActivity extends Fragment {
 		mediaFile = new File(mediaStorageDir.getPath() + File.separator + mImageName);
 		return mediaFile;
 	}
-
+	private void storeImageToGallery(Bitmap image){
+		String path = MediaStore.Images.Media.insertImage(getActivity().getApplicationContext().getContentResolver(), image, "Shake-Take", "");
+		eventListener.onPictureTaken(path, path);
+		currentPicture = null;
+	}
 	private File storeImage(Bitmap image, String suffix) {
 		File pictureFile = getOutputMediaFile(suffix);
 		if (pictureFile != null) {

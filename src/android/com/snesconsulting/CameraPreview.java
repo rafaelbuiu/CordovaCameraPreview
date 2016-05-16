@@ -92,7 +92,10 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 					Boolean tapToTakePicture = args.getBoolean(5);
 					Boolean dragEnabled = args.getBoolean(6);
 					Boolean toBack = args.getBoolean(7);
+					float alpha =  Float.parseFloat(args.getString(8));
+					Boolean storeToGallery = args.getBoolean(9);
 
+					fragment.storeToGallery = storeToGallery;
 					fragment.defaultCamera = defaultCamera;
 					fragment.tapToTakePicture = tapToTakePicture;
 					fragment.dragEnabled = dragEnabled;
@@ -114,7 +117,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 					}
 					else{
 						//set camera back to front
-						containerView.setAlpha(Float.parseFloat(args.getString(8)));
+						containerView.setAlpha(alpha);
 						containerView.bringToFront();
 					}
 

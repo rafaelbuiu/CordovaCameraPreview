@@ -30,7 +30,8 @@
                 BOOL tapToTakePicture = (BOOL)[command.arguments[5] boolValue];
                 BOOL dragEnabled = (BOOL)[command.arguments[6] boolValue];
                 BOOL toBack = (BOOL)[command.arguments[7] boolValue];
-                BOOL toGallery = (BOOL)[command.arguments[8] boolValue];
+                CGFloat alpha  = (CGFloat)[command.arguments[8] floatValue];
+                BOOL toGallery = (BOOL)[command.arguments[9] boolValue];
                 self.storeToGalery = toGallery;
            // sleep(3);
                 // Create the session manager
@@ -63,7 +64,7 @@
 //                        [self.viewController.view bringSubviewToFront:self.cameraRenderController.view];
                         
                     } else {
-                        self.cameraRenderController.view.alpha = (CGFloat)[command.arguments[8] floatValue];
+                        self.cameraRenderController.view.alpha = alpha;
 
                         [self.viewController.view addSubview:self.cameraRenderController.view];
                     }
