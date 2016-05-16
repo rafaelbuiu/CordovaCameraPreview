@@ -94,12 +94,14 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 					Boolean toBack = args.getBoolean(7);
 					float alpha =  Float.parseFloat(args.getString(8));
 					Boolean storeToGallery = args.getBoolean(9);
+					int compression = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, args.getInt(10), metrics);
 
 					fragment.storeToGallery = storeToGallery;
 					fragment.defaultCamera = defaultCamera;
 					fragment.tapToTakePicture = tapToTakePicture;
 					fragment.dragEnabled = dragEnabled;
 					fragment.setRect(x, y, width, height);
+					fragment.setCompression(compression);
 
 					//create or update the layout params for the container view
 					FrameLayout containerView = (FrameLayout)cordova.getActivity().findViewById(containerViewId);

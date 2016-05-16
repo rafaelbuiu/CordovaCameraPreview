@@ -24,5 +24,5 @@
 @property (nonatomic) CameraRenderController *cameraRenderController;
 @property (nonatomic) NSString *onPictureTakenHandlerId;
 @property (nonatomic) BOOL storeToGalery;
-
+@property (nonatomic) CGFloat compression;
 @end

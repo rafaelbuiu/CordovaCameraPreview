@@ -12,10 +12,11 @@ CameraPreview.setOnPictureTakenHandler = function(onPictureTaken) {
 
 //@param rect {x: 0, y: 0, width: 100, height:100}
 //@param defaultCamera "front" | "back"
-CameraPreview.startCamera = function(rect, defaultCamera, tapEnabled, dragEnabled, toBack, alpha, storeToGallery, onSuccess, onError) {
+CameraPreview.startCamera = function(rect, defaultCamera, tapEnabled, dragEnabled, toBack, alpha, storeToGallery, compression, onSuccess, onError) {
   if (typeof(alpha) === 'undefined') alpha = 1;
   if (typeof(storeToGallery) !== 'boolean') storeToGallery = false;
-  exec(onSuccess, onError, PLUGIN_NAME, "startCamera", [rect.x, rect.y, rect.width, rect.height, defaultCamera, !!tapEnabled, !!dragEnabled, !!toBack, alpha, !!storeToGallery]);
+  if (typeof(compression) === 'undefined') compression = 80; // 0-100. 100 => least amount of compression.
+  exec(onSuccess, onError, PLUGIN_NAME, "startCamera", [rect.x, rect.y, rect.width, rect.height, defaultCamera, !!tapEnabled, !!dragEnabled, !!toBack, alpha, !!storeToGallery, compression]);
 };
 CameraPreview.stopCamera = function(onSuccess, onError) {
   exec(onSuccess, onError, PLUGIN_NAME, "stopCamera", []);

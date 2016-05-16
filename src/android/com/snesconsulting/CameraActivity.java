@@ -76,6 +76,7 @@ public class CameraActivity extends Fragment {
 	public int height;
 	public int x;
 	public int y;
+	public int compression = 80;
 
 	public void setEventListener(CameraPreviewListener listener){
 		eventListener = listener;
@@ -103,6 +104,13 @@ public class CameraActivity extends Fragment {
 		this.y = y;
 		this.width = width;
 		this.height = height;
+	}
+	public void setCompression(int compression){
+		if(compression < 0 || compression > 100){
+			//Invalid data
+			return;
+		}
+		this.compression = compression;
 	}
 
 	private void createCameraPreview(){
@@ -496,7 +504,7 @@ public class CameraActivity extends Fragment {
 		if (pictureFile != null) {
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
-				image.compress(Bitmap.CompressFormat.JPEG, 80, fos); //TODO: Make compression a param.
+				image.compress(Bitmap.CompressFormat.JPEG, compression, fos);
 				fos.close();
 				return pictureFile;
 			}
