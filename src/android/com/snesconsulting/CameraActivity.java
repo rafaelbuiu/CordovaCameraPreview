@@ -487,7 +487,7 @@ public class CameraActivity extends Fragment {
 		return mediaFile;
 	}
 	private void storeImageToGallery(Bitmap image){
-		String path = MediaStore.Images.Media.insertImage(getActivity().getApplicationContext().getContentResolver(), image, "Shake-Take", "");
+		String path = MediaStore.Images.Media.insertImage(getActivity().getApplicationContext().getContentResolver(), image, "", "");
 		eventListener.onPictureTaken(path, path);
 		currentPicture = null;
 	}
